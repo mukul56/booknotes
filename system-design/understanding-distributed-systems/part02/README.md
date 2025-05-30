@@ -127,6 +127,160 @@ In the above example:
 A downside of vector clocks is that storage requirements grow with every new process.
 Other types of logical clocks, like [dotted version clocks](https://queue.acm.org/detail.cfm?id=2917756) solve this issue.
 
+
+## 🔷 1. Why Not Just Use Vector Clocks?
+
+Let’s recall vector clocks:
+
+* Each process/node has a vector of size N.
+* Each vector tracks how many events happened at each process.
+
+**Example:**
+
+```
+Process A’s VC: [A: 2, B: 1, C: 0]
+```
+
+### ❌ Problem:
+
+* In systems with many nodes, the vector becomes too big to store or send.
+* In dynamic systems (new nodes join/leave), the vector is not flexible.
+
+---
+
+## 🔷 2. The Insight Behind Dotted Version Clocks
+
+Instead of sending the full vector for every update, why not just send:
+
+* A summary of what I’ve seen before
+* The new event I’m adding right now
+
+That’s exactly what **Dotted Version Clocks (DVCs)** do.
+
+---
+
+## 🔷 3. DVC Structure
+
+A Dotted Version Clock consists of:
+
+```
+(dot, context)
+= ((process_id, counter), version_vector)
+```
+
+| Term    | Meaning                                                               |
+| ------- | --------------------------------------------------------------------- |
+| dot     | A single unique event happening now: (P, c) = “event #c at process P” |
+| context | A summary of everything known up to this point (like a smaller VC)    |
+
+### 🔹 Analogy:
+
+* **Dot:** “This is the new change I’m making.”
+* **Context:** “Here’s what I knew before making that change.”
+
+### 📘 Example:
+
+Suppose 3 processes: A, B, C
+
+Let’s say A is about to make an update:
+
+* A’s last known version:
+
+```json
+context = {A: 2, B: 5, C: 4}
+```
+
+* A is now performing event #3 (3rd event at A)
+
+**Dotted Version Clock:**
+
+```json
+((A, 3), {A: 2, B: 5, C: 4})
+```
+
+This tells the system:
+
+* I’ve seen everything up to:
+
+  * A: 2
+  * B: 5
+  * C: 4
+* And now I’m adding event 3 at A
+
+---
+
+## 🔷 4. What Problem Does It Solve?
+
+### ✅ Comparison to Vector Clock:
+
+| Vector Clock                | Dotted Version Clock                    |
+| --------------------------- | --------------------------------------- |
+| \[A: 3, B: 5, C: 4]         | ((A, 3), {A: 2, B: 5, C: 4})            |
+| Carries all history in full | Carries history summary + current event |
+| Grows with N processes      | More compact and scalable               |
+
+---
+
+## 🔷 5. How It Helps in Real-World Conflict Resolution
+
+Let’s say:
+
+* Alice (A) makes change 3: `((A, 3), {A: 2, B: 5, C: 4})`
+* Bob (B) makes change 6: `((B, 6), {A: 3, B: 5, C: 4})`
+
+### Goal: Compare these dotted clocks to detect:
+
+* Causal order
+* Conflict
+* Concurrency
+
+### 💡 Dotted Clock Rules:
+
+Let’s denote clocks as:
+
+```text
+dot1 = (P1, c1), context1
+dot2 = (P2, c2), context2
+```
+
+Then:
+
+* **dot1 is causally before dot2** if:
+
+  * P1 == P2 and c1 < c2, or
+  * c1 ≤ context2\[P1] (i.e., dot1’s event is already known in dot2’s context)
+
+* If neither is before the other → **concurrent/conflict**
+
+This is how we detect conflicts in **CRDTs**, **Dynamo-style databases**, and **replica reconciliation**.
+
+---
+
+## 🔷 6. Visual Representation
+
+### Dotted Version Clock = Dot + Context
+
+```
+Update by A:
+Dot:     (A, 3)        // Current new event
+Context: {A: 2, B: 5}  // Everything this update depends on
+
+Update by B:
+Dot:     (B, 6)
+Context: {A: 3, B: 5}
+```
+
+### Comparison:
+
+* `(A,3)` is already in Bob's context: `{A:3}` → ✅ A’s update happened-before B’s.
+* But Bob’s dot `(B,6)` is not in A’s context `{B:5}` → ❌ Not known by A
+
+  * ⇒ So A sees B’s update as newer
+  * ⇒ While B has already seen A’s update
+
+
+
+
 ## Summary
 Using physical clocks for timestamp is good enough for some records such as logs.
 
