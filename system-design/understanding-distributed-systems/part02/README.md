@@ -387,15 +387,6 @@ What if a follower dies & comes back alive afterwards?
  * When the message is rejected, the leader sends the last two messages. If those are also rejected, the last three are sent and so forth.
  * Eventually, the follower will receive all log entries they've missed and make their state up-to-date.
 
-
-  Absolutely. Let’s now go **deeper** into:
-
-1. 🔥 **What exactly replication means**
-2. 🧠 **Why state machine replication is reliable**
-3. 📜 **Raft’s log structure and mechanics (with visuals via text)**
-4. ⚔️ **Other replication strategies in distributed systems**
-5. ✅ Summary and how to think during interviews
-
 ---
 
 ## 🔷 1. What Exactly Is Data Replication?
