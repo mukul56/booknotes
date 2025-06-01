@@ -1966,6 +1966,186 @@ One of the most successful implementations is Google's Spanner:
 
 Another system inspired by Spanner is CockroachDB which works in a similar way, but uses hybrid-logical clocks to avoid having to provision highly costly atomic clocks.
 
+
+**NewSQL** is a class of modern **relational database management systems (RDBMS)** that aim to combine the best of both worlds:
+
+* The **scalability and high availability** of **NoSQL** systems, and
+* The **ACID guarantees**, **SQL interface**, and **relational model** of **traditional RDBMS** like MySQL or PostgreSQL.
+
+Let’s go deep into this concept, especially in context of high-level system design and distributed systems.
+
+---
+
+## 🔷 Why NewSQL?
+
+### Traditional RDBMS:
+
+* **Good** for consistency (ACID).
+* **Bad** for horizontal scalability.
+* Vertical scaling only (scale-up), expensive and limited.
+
+### NoSQL:
+
+* **Great** at scaling horizontally.
+* Flexible schema (good for semi-structured data).
+* But **sacrifices consistency**, lacks transactions, complex joins.
+
+### NewSQL:
+
+* Tries to **keep SQL and ACID**.
+* Adds the **horizontal scalability** of NoSQL.
+* Designed for **distributed systems**, **multi-node clusters**, **cloud-native architectures**.
+
+---
+
+## 🔷 Core Properties of NewSQL
+
+| Property                     | Description                                                |
+| ---------------------------- | ---------------------------------------------------------- |
+| **SQL support**              | You can use SQL for queries (joins, filters, aggregation). |
+| **ACID transactions**        | Strong consistency and rollback features.                  |
+| **Horizontal scalability**   | Distributes data across nodes like NoSQL.                  |
+| **High availability**        | Uses replication and failover mechanisms.                  |
+| **Distributed architecture** | Built for multi-node deployment from the ground up.        |
+
+---
+
+## 🔷 Types of NewSQL Architectures
+
+NewSQL databases typically fall into 3 categories:
+
+### 1. **New Architecture DBs**
+
+Designed from scratch for distributed environments.
+
+Examples:
+
+* **Google Spanner**
+* **CockroachDB**
+* **NuoDB**
+
+These are designed with:
+
+* Distributed consensus (e.g., Raft, Paxos)
+* Distributed clock (e.g., TrueTime in Spanner)
+* Strong consistency across geo-replicated nodes
+
+### 2. **Improved MySQL/PostgreSQL Engines**
+
+Keep familiar interfaces but with distributed enhancements.
+
+Examples:
+
+* **Vitess** (used by YouTube)
+* **CitusDB** (PostgreSQL extension by Microsoft)
+* **Aurora** (Amazon’s MySQL/PostgreSQL-compatible engine)
+
+These use:
+
+* Sharding
+* Replication
+* Storage separation
+
+### 3. **Transparent Sharding Middleware**
+
+Acts as a proxy layer that shards traditional databases.
+
+Examples:
+
+* **TiDB** (built over RocksDB + MySQL Protocol)
+* **Clustrix**
+
+---
+
+## 🔷 NewSQL vs NoSQL vs Traditional RDBMS
+
+| Feature     | RDBMS        | NoSQL                            | NewSQL            |
+| ----------- | ------------ | -------------------------------- | ----------------- |
+| SQL Support | ✅            | ❌                                | ✅                 |
+| ACID        | ✅            | ❌ (usually eventual consistency) | ✅                 |
+| Joins       | ✅            | ❌                                | ✅                 |
+| Scalability | ❌ (vertical) | ✅ (horizontal)                   | ✅ (horizontal)    |
+| Use Case    | Legacy/OLTP  | Big Data, flexible schema        | Cloud-native OLTP |
+
+---
+
+## 🔷 Use Cases of NewSQL
+
+* **Financial systems**: where consistency and speed are both critical.
+* **E-commerce systems**: need to scale without losing transactional integrity.
+* **Global SaaS platforms**: multi-region consistency with high availability.
+* **Gaming platforms**: concurrent writes and reads with transactional safety.
+
+---
+
+## 🔷 Internals: How NewSQL Achieves It?
+
+### 1. **Distributed Consensus Protocols**
+
+Like **Raft** or **Paxos** for replication and leader election.
+
+### 2. **Deterministic Execution**
+
+All nodes execute same logic to ensure consistency.
+
+### 3. **Clock Synchronization**
+
+E.g., **Google TrueTime** in Spanner, ensures global ordering.
+
+### 4. **Data Partitioning + Replication**
+
+Tables are **sharded (partitioned)** across nodes and **replicated** for fault tolerance.
+
+### 5. **Distributed Query Execution**
+
+Queries can span nodes and are optimized for parallelism.
+
+---
+
+## 🔷 Real World Example: Google Spanner
+
+Spanner is the flagship NewSQL system:
+
+* Uses **TrueTime API** (synchronized clock) to order transactions.
+* Supports **SQL**.
+* Offers **global consistency** and **horizontal scaling**.
+* Runs on **Colossus (Google's distributed filesystem)**.
+
+---
+
+## 🔷 Edge Cases to Consider in HLD
+
+1. **Cross-shard transactions**: NewSQL handles this using 2PC or consensus.
+2. **Clock skew**: Needs solutions like TrueTime to prevent stale reads.
+3. **Network partitions**: Uses Raft/Paxos to ensure safety/liveness.
+4. **Query planner overhead**: Query optimization must span multiple nodes.
+
+---
+
+## 🔷 Popular NewSQL Databases (with notes)
+
+| DB                       | Notes                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| **Google Spanner**       | Global-scale, TrueTime, built for GCP.                                        |
+| **CockroachDB**          | Open-source, distributed, uses Raft.                                          |
+| **TiDB**                 | MySQL compatible, supports HTAP (Hybrid Transactional/Analytical Processing). |
+| **NuoDB**                | Dynamic scale-out/in without downtime.                                        |
+| **ClustrixDB**           | Drop-in MySQL replacement with scale.                                         |
+| **MemSQL (SingleStore)** | Focus on speed, OLTP + OLAP combined.                                         |
+
+---
+
+## 🔷 Interview Angle: Sample Questions
+
+1. ✅ Why would you choose NewSQL over NoSQL or RDBMS for a payment system?
+2. ✅ How does Google Spanner achieve consistency across regions?
+3. ✅ What are the challenges of scaling traditional RDBMS?
+4. ✅ What trade-offs does NewSQL make compared to NoSQL?
+5. ✅ How does CockroachDB ensure ACID properties in a distributed environment?
+
+
+
+
 # Asynchronous transactions
 2PC is synchronous & blocking. It is usually combined with 2PL to provide isolation.
 
